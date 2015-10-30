@@ -1,0 +1,49 @@
+REST
+
+/clients
+-------
++ newClient() - POST
++ getClients() - GET
+
+/clients/{id}
+-----------
++ deleteClient() - DELETE
++ updateClient() - PUT
++ getClientDetails() - GET
+
+/clients/{id}/cart/
+-------------------
++ addCart() - POST
+
+/clients/{id}/cart/{id}
+-----------------------
++ deleteCart() - DELETE
+
+
+/clients/{id}/cart/{id}/items
+---------------------------------
++ addItem() - POST
++ getItems() - GET
+
+
+/clients/{id}/carts/{id}/items/{id}
+-----------------------------------
++ delItem() - DELETE
++ updateItem() - PUT
+
+
+/wines
+------
++ addWine() - POST
++ allWines() - GET
++ deleteWines() - DELETE 
+
+/wines/{id}
+----------
++ getWineProperties() - GET
++ updateWine() - PUT
++ deleteWine() - DELETE
+
+/wines/{type}
+------------------
++ wineByType() - GET
