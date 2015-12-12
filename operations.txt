@@ -11,16 +11,16 @@ REST
 + updateClient() - PUT
 + getClientDetails() - GET
 
-/clients/{id}/cart/
+/clients/{id}/carts/
 -------------------
-+ addCart() - POST
++ addCart() - POST			(OK)
 
-/clients/{id}/cart/{id}
+/clients/{id}/carts/{id}
 -----------------------
-+ deleteCart() - DELETE
++ deleteCart() - DELETE 	(OK)
 
 
-/clients/{id}/cart/{id}/items
+/clients/{id}/carts/{id}/items
 ---------------------------------
 + addItem() - POST
 + getItems() - GET
@@ -34,16 +34,16 @@ REST
 
 /wines
 ------
-+ addWine() - POST
-+ allWines() - GET
-+ deleteWines() - DELETE 
++ addWine() - POST			(OK) 
++ allWines() - GET 			(OK)
++ deleteWines() - DELETE 	(OK)
 
 /wines/{id}
 ----------
-+ getWineProperties() - GET
-+ updateWine() - PUT
-+ deleteWine() - DELETE
++ getWineProperties() - GET (OK)
++ updateWine() - PUT		(OK)
++ deleteWine() - DELETE 	(OK)
 
-/wines/{type}
+/types/{type}
 ------------------
-+ wineByType() - GET
++ wineByType() - GET 		(OK)
