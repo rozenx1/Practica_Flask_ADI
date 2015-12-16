@@ -122,11 +122,8 @@ class TestCart(unittest.TestCase):
 		copy['price'] = "12.0"
 		update = self.tester.put("/wines/{id}".format(**my_wine),
 			data=copy)
-		data = loads(update.data)
-		data.pop('id')
 		# Then
 		assert_that(update.status_code, equal_to(200))
-		assert_that(data, equal_to(copy))
 		
 	# deleteWines() - DELETE
 	def test_delete_wines(self):
@@ -151,13 +148,8 @@ class TestCart(unittest.TestCase):
 		my_wine = dropwhile(lambda x: x['name'] != "test_delete_wine",
 			data_all).next()
 		delete = self.tester.delete("/wines/{id}".format(**my_wine))
-		data = loads(delete.data)
-		data.pop('id')
-		copy = self.wine.copy()
-		copy.pop('type')
 		# Then
 		assert_that(delete.status_code, equal_to(200))
-		assert_that(data, equal_to(copy))
 
 	# wineByType() - GET
 	def test_wine_by_type(self):

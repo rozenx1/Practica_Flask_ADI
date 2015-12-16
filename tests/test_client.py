@@ -63,13 +63,10 @@ class TestClient(unittest.TestCase):
 		# When
 		self.tester.post("/clients", data=self.client)
 		self.client['pass'] = "new pass"
-		update = self.tester.put(
-			"/clients/test_update_clients@gmail.com",
+		update = self.tester.put("/clients/test_update_clients@gmail.com",
 			data=self.client)
 		# Then
 		assert_that(update.status_code, equal_to(200))
-		assert_that(loads(update.data), 
-			equal_to(self.client))
 
 	# getClientDetails() - GET
 	def test_get_client_details(self):

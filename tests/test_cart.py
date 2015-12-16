@@ -29,7 +29,6 @@ class TestCart(unittest.TestCase):
 
 	url_client = "/clients/{email}".format(**client)
 	url_carts = url_client+"/carts"
-	url_items = url_carts+"/items"
 
 	def setUp(self):
 		self.tester = app.test_client(self)
@@ -46,17 +45,45 @@ class TestCart(unittest.TestCase):
 			"/clients/{email}".format(**self.client))
 		del self.tester
 
-
-	# addItem() - POST
-	def test_add_item(self):
-		# Given
+	def post(self):
 		cart = {'name':'test_add_item'}
-		# When
 		post_cart = self.tester.post(self.url_carts, data=cart)
 		get = self.tester.get(self.url_client)
 		cart_id = loads(get.data)['carts'][0]
-		url_item = self.url_carts+"/"+cart_id+"/items"
-		post_item = self.tester.post(url_item, data=self.item)
+		self.url_item = self.url_carts+"/"+cart_id+"/items"
+		return self.tester.post(self.url_item, data=self.item)
+		
+	# addItem() - POST
+	def test_add_item(self):
+		# When
+		post = self.post()
 		# Then
-		assert_that(post_item.status_code, equal_to(201))
+		assert_that(post.status_code, equal_to(201))
+
+	# getItems() - GET
+	def test_get_items(self):
+		# When
+		self.post()
+		get_all = self.tester.get(self.url_item)
+		# Then
+		assert_that(get_all.status_code, equal_to(200))
+
+
+	# delItem() - DELETE
+	def test_delete_item(self):
+		# When
+		self.post()
+		delete = self.tester.delete(self.url_item+"/"+self.item['item'])
+		# Then
+		assert_that(delete.status_code, equal_to(200))
+
+	# updateItem() - PUT
+	def test_update_item(self):
+		# When
+		self.post()
+		update = self.tester.put(self.url_item+"/"+self.item['item'], 
+			data={"item":"madeup"}) 
+		# Then
+		assert_that(update.status_code, equal_to(404))
+
 		
