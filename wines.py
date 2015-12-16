@@ -27,19 +27,15 @@ def newClient():
 	# Check whether values are present in the request
 	check_vals(["email", "pass", "address", "phone"])
 	# Check whether client is not repeated
-	if clients.has_key(request.form["email"]):
-		abort(400)
-	# Rescue values from request and initialize carts to empty
-	new_client =  {
-		"email":	request.form["email"],
-		"pass":		request.form["pass"],
-		"address":	request.form["address"],
-		"phone":	request.form["phone"],
-		"carts":	[]
-	}
-	clients[request.form["email"]] = new_client
+	new_client = Client(
+		email=request.form["email"],
+		password=request.form["pass"],
+		address=request.form["address"],
+		phone=request.form["phone"]
+	)
+	ID = new_client.put()
 	# Make response "201 Created"
-	return make_response(jsonify({"created":request.form["email"]}), 201)
+	return make_response(jsonify({"created":ID}), 201)
 
 # getClients() - GET
 @app.route("/clients", methods=["GET"])
