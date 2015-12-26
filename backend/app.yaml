@@ -1,3 +1,4 @@
+
 application: wines
 version: 1
 runtime: python27
@@ -7,7 +8,6 @@ threadsafe: true
 handlers:
 - url: .*
   script: wines.app
-
 
 libraries:
 - name: jinja2

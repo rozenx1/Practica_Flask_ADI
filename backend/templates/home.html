@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title></title>
+</head>
+<body>
+	{% if client %}
+	<p>Tu eres: {{ client.id }}</p>
+	{% else %}
+	<p>No estás autenticado</p>
+	{% endif %}
+
+	<p>Introduce tu email de cliente para generar la clave:</p>
+	<form method="POST" action="/">
+		<input type="text" name="email">
+		<input type="submit">
+	</form>
+</body>
+</html>
