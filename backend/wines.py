@@ -4,6 +4,7 @@
 from flask import session, request, url_for, render_template, redirect
 from flask import Flask, jsonify, abort, make_response
 from flask_oauthlib.provider import OAuth2Provider
+from flask_httpauth import HTTPBasicAuth
 from datetime import datetime, timedelta
 from werkzeug.security import gen_salt
 from google.appengine.ext import ndb
@@ -11,6 +12,8 @@ from itertools import dropwhile
 from functools import wraps
 from app_types import *
 from oauth_aux import *
+
+from time import sleep
 
 app = Flask(__name__)
 app.secret_key = 'ultra-secret'
@@ -60,7 +63,7 @@ def check_cart(action):
 # OAUTH
 #-------------------------------------------------------------------------
 oauth = OAuth2Provider(app)
-url_redirect = "http://127.0.0.1:8080/oauthorized"
+url_redirect = "http://localhost:8002/oauthorized"
 
 @app.route('/', methods=('GET', 'POST'))
 def home():
@@ -73,14 +76,13 @@ def home():
 
 @app.route('/app_client', methods=['GET'])
 def client():
-	print "bien!!"
     client_url = session.get("client")
     if not client_url: return redirect('/')
     app_client = AppClient(
         client_id=gen_salt(40),
         client_secret=gen_salt(50),
         redirect_uris=[url_redirect],     
-        default_scopes='email',
+        default_scopes=['email'],
         user=retrieve(client_url)
     )
     app_client.put()
@@ -91,30 +93,42 @@ def client():
 
 @oauth.clientgetter
 def load_client(client_id):
+	print "Load client"
 	return AppClient.query(AppClient.client_id == client_id).get()
 
 @oauth.grantgetter
 def load_grant(client_id, code):
-	app_client = AppClient.query(AppClient.client_id == client_id)
-	return GrantToken.query(GrantToken.client == app_client,
-		GrantToken.code == code).get()
+	print "Get grant"
+	print "Antes: "+str(GrantToken.query(GrantToken.code == code).fetch())
+	sleep(1)
+	print "Despues: "+str(GrantToken.query(GrantToken.code == code).fetch())
+	print "Code en load_grant: "+code
+	app_client = AppClient.query(AppClient.client_id == client_id).fetch()[0].key
+	print GrantToken.query(GrantToken.code == code).fetch()
+	return GrantToken.query(GrantToken.client == app_client, 
+		GrantToken.code == code).fetch()[0]
 
 @oauth.grantsetter
 def save_grant(client_id, code, request, *args, **kwargs):
-	expires = datatetime.utcnow() + timedelta(seconds=360)
+	print "Save grant"
+	expires = datetime.utcnow() + timedelta(seconds=360)
+	app_client = AppClient.query(AppClient.client_id == client_id).fetch()[0]
 	grant = GrantToken(
-		client=AppClient.query(AppClient.client_id == client_id),
-		user=retrieve(session.get("client")),
+		client=app_client.key,
+		user=app_client.user,
 		code=code['code'],
 		redirect_uri=request.redirect_uri,
-		scopes=' '.join(request.scopes),
+		scopes=request.scopes,
 		expires=expires
 	)
+	print "Code en save_grant: "+str(code['code'])
 	grant.put()
+    print "Antes de put: "+str(GrantToken.query(GrantToken.code == code['code']).fetch())
 	return grant
 
 @oauth.tokengetter
 def load_token(access_token=None, refresh_token=None):
+	print "Load bear"
 	if access_token:
 		return Token.query(Token.access_token == access_token).get()
 	else:
@@ -122,24 +136,24 @@ def load_token(access_token=None, refresh_token=None):
 
 @oauth.tokensetter
 def save_token(token, request, *args, **kwargs):
-	app_client = AppClient.query(AppClient.client_id == request.client.client_id).get()
-	client = retrieve(request.user.id, Client)
-	toks = Token.query(client=request.client.client_id, 
-		user=request.user.id)
+	print "Save bear"
+	toks = Token.query(Token.client == request.client.key, 
+		Token.user == request.user).fetch()
 
-	for token in toks:
-		token.delete()
+	for t in toks:
+		t.delete()
 
-	expires_in = token.get('expires_in')
+	expires_in = token.pop('expires_in')
 	expires = datetime.utcnow() + timedelta(seconds=expires_in)
+	app_client = AppClient.query(AppClient.client_id == request.client.client_id).fetch()[0]
 	tok = Token(
 		access_token=token['access_token'],
 		refresh_token=token['refresh_token'],
 		token_type=token['token_type'],
-		scope=token['scope'],
+		scopes=[token['scope']],
 		expires=expires,
-		client=app_client,
-		user=client
+		client=app_client.key,
+		user=app_client.user
 	)
 	tok.put()
 	return tok
@@ -147,21 +161,38 @@ def save_token(token, request, *args, **kwargs):
 @app.route('/oauth/authorize', methods=('GET', 'POST'))
 @oauth.authorize_handler
 def authorize(*args, **kwargs):
+	print "Authorize handler"
 	if request.method == 'GET':
         client_id = kwargs.get('client_id')
-        app_client = AppClient.query(AppClient.client_id == client_id)
+        app_client = AppClient.query(AppClient.client_id == client_id).fetch()[0]
         kwargs['app_client'] = app_client
-        client = retrieve(session.get("client")).get()
+        client = app_client.user.get()
         kwargs['client'] = client
-        return render_template('oauthorize.html', **kwargs)
+        return render_template('authorize.html', **kwargs)
 
 	confirm = request.form.get('confirm', 'no')
     return confirm == 'yes'
 
-@app.route('/oauth/token')
+@app.route('/oauth/token', methods=('GET', 'POST'))
 @oauth.token_handler
 def access_token():
+	print "Token handler"
     return None
+
+# HTTPBASICAUTH
+# ------------------------------------------------------------------------
+auth = HTTPBasicAuth()
+
+# -H "Authorization:Basic cm9vdDphZG1pbg=="
+users = {
+	"root":"admin"
+}
+
+@auth.get_password
+def get_pw(username):
+	if username in users:
+		return users[username]
+	return None
 
 # ACTIONS
 # ------------------------------------------------------------------------
@@ -204,8 +235,8 @@ def getClientDetails(ID_client):
 	client = retrieve(ID_client).get()
 	return make_response(jsonify({"client":client.json()}), 200)
 
-
 @app.route("/wines", methods=["POST"])
+@auth.login_required
 @check_vals(["name", "type"])
 def addWine():
 	data = request.get_json()
@@ -215,6 +246,7 @@ def addWine():
 	return make_response(jsonify({"created":ID.urlsafe()}), 201)
 
 @app.route("/wines", methods=["GET"])
+@auth.login_required
 def allWines():
 	wines = map(lambda w: w.json(), Wine.query())
 	return make_response(jsonify({"all":wines}), 200)

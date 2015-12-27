@@ -8,10 +8,10 @@ class AppClient(ndb.Model):
 	client_secret = ndb.StringProperty()
 	client_type = ndb.StringProperty(default="public")
 	default_redirect_uri = ndb.StringProperty(
-		default="http://127.0.0.1:8080/oauthorized")
+		default="http://localhost:8002/oauthorized")
 	user = ndb.KeyProperty(kind="Client")
 	redirect_uris = ndb.StringProperty(repeated=True)
-	default_scopes = ndb.StringProperty()
+	default_scopes = ndb.StringProperty(repeated=True)
 
 
 class GrantToken(ndb.Model):
@@ -22,6 +22,9 @@ class GrantToken(ndb.Model):
 	code = ndb.StringProperty()
 	redirect_uri = ndb.StringProperty()
 
+	def delete(self):
+		self.key.delete()
+
 class Token(ndb.Model):
 	client = ndb.KeyProperty(kind="AppClient")
 	user = ndb.KeyProperty(kind="Client")
@@ -29,3 +32,7 @@ class Token(ndb.Model):
 	scopes = ndb.StringProperty(repeated=True)
 	access_token = ndb.StringProperty()
 	refresh_token = ndb.StringProperty()
+	token_type = ndb.StringProperty()
+	
+	def delete(self):
+		self.key.delete()
