@@ -1,21 +1,28 @@
 #!/usr/bin/python
 # -*- coding:utf-8; tab-width:4; mode:python -*-
 
-from flask import Flask, request, redirect, url_for, g, session, flash, render_template
+from flask import Flask, request, jsonify, redirect, url_for, g, session, flash, render_template
 from flask_oauthlib.client import OAuth
-import json, requests
+from json import dumps
+import requests
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 app = Flask(__name__)
+app.secret_key = 'ultra-secret'
 app.config['DEBUG'] = True
-app.secret_key = 'secret'
 
 # OAUTH
 #-------------------------------------------------------------------------
+client_id = "kUpFYk8wdI3rv8Q4T0FZ6EWSZ0aoiWwj2bs8T6Nc"
+client_secret = "5iHsNjjgArC2NfUXGVGpTQ9cMIQ0LPn9hq959A5LCauLa4127n"
+
 oauth = OAuth(app)
 remote = oauth.remote_app(
     'remote',
-    consumer_key="BVR357AwLPWqcgrK3sxIm0K0dFU5XpGAMZ3i4CyR",
-    consumer_secret="Oe0Vo0fxOKGAikEkpxjFEehBVCkxHKl5y853OmEFU3A3bkmuZF",
+    consumer_key=client_id,
+    consumer_secret=client_secret,
     request_token_params={'scope': 'email'},
     base_url='http://localhost:8080',
     request_token_url=None,
@@ -51,39 +58,54 @@ def before_request():
 # Callback
 @app.route('/oauthorized')
 def oauthorized():
-    print "oauthorized!"
     resp = remote.authorized_response()
-    print "paso la cagada"
     if resp is None:
         flash('No tienes autorizacion.')
     else:
         session['remote_oauth'] = resp
-    print "paso la ultima cagada"
-    print resp
-    return render_template('index.html', wines=None)
-
+    return redirect('/')
 
 
 # ACTIONS
 #-------------------------------------------------------------------------
-@app.route("/", methods=["GET"])
+@app.route("/")
 def index():
-	# wines = remote.request('wines')
-    return render_template('index.html', wines=None)
-	# return render_template('index.html', wines=wines.data['all'])
+    return render_template('index.html')
 
-@app.route("/filterByType/<wine_type>", methods=["GET"])
+@app.route("/allWines")
+def allWines():
+    wines = remote.get("/wines")
+    return jsonify(wines.data)
+
+@app.route("/filterByType/<wine_type>")
 def filterByType(wine_type):
-	wines = remote.request('/types/{wine_type}'.format(**locals()))
-	return render_template('index.html', wines=wines.data['all'])
+    wines = remote.get("/types/{wine_type}".format(**locals()))
+    return jsonify(wines.data)
 
-@app.route('/filterByName/<wine_name>', methods=["GET"])
+@app.route('/filterByName/<wine_name>')
 def filterByName(wine_name):
-	pass
+    wines = remote.get('wines').data['all']
+    wines = filter(lambda w: wine_name in w['name'], wines)
+    return jsonify({"all":wines})
 
 @app.route('/filterByPrices', methods=['POST'])
-def filterByPrice():
-	pass
+def filterByPrices():
+    data = request.get_json()
+    wines = remote.get('wines').data['all']
+    f = lambda w: w['price'] >= data['min'] and w['price'] <= data['max']
+    wines = filter(f, wines)
+    return jsonify({"all":wines})
+
+@app.route('/postCart', methods=["POST"])
+def postCart():
+    data = request.get_json()
+    post = remote.post('/me', data=dumps({"client_id":client_id}),
+        content_type="application/json")
+    me = post.data['me']
+    url = "/clients/{me}/carts".format(**locals())
+    post = remote.post(url, data=dumps(data), 
+        content_type="application/json")
+    return jsonify(post.data)
 
 if __name__ == "__main__":
     import os

@@ -9,7 +9,7 @@ class AppClient(ndb.Model):
 	client_type = ndb.StringProperty(default="public")
 	default_redirect_uri = ndb.StringProperty(
 		default="http://localhost:8002/oauthorized")
-	user = ndb.KeyProperty(kind="Client")
+	# user = ndb.KeyProperty(kind="Client")
 	redirect_uris = ndb.StringProperty(repeated=True)
 	default_scopes = ndb.StringProperty(repeated=True)
 
