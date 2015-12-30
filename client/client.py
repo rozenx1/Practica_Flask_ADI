@@ -4,12 +4,10 @@
 from flask import Flask, request, jsonify, redirect, url_for, g, session, flash, render_template
 from flask_oauthlib.client import OAuth
 from json import dumps
-import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
+from uuid import uuid4
 
 app = Flask(__name__)
-app.secret_key = 'ultra-secret'
+app.secret_key = str(uuid4())
 app.config['DEBUG'] = True
 
 # OAUTH

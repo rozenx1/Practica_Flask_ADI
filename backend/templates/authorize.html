@@ -7,21 +7,29 @@
 	<link rel=stylesheet type=text/css href="{{ url_for('static',filename='bootstrap-theme.css') }}">
 	<script src="{{ url_for('static', filename='jquery.js') }}"></script>
 	<script src="{{ url_for('static', filename='bootstrap.min.js') }}"></script>
+	<style>
+	p{
+		font-size: 20px;
+	}
+	</style>
 </head>
 <body>
-	<p>Client: {{ app_client.client_id }}</p>
-	<p>User: {{ client.email }}</p>
-	<form action="/oauth/authorize" method="POST">
-		<p>Allow access?</p>
-		<input type="hidden" name="client_id" value="{{ app_client.client_id }}">
-		<input type="hidden" name="scope" value="{{ scopes|join(' ') }}">
-		<input type="hidden" name="response_type" value="{{ response_type }}">
-		<input type="hidden" name="redirect_uri" value="{{ redirect_uri }}">
-		{% if state %}
-		<input type="hidden" name="state" value="{{ state }}">
-		{% endif %}
-		<input type="submit" name="confirm" value="yes">
-		<input type="submit" name="confirm" value="no">
-	</form>
+	<div class="container">
+		<h1 class="text-primary">Autenticación Oauth</h1>	
+		<p class="text-">Cliente: <pre>{{ app_client.client_id }}</pre> </p>
+		<p class="text-">Usuario: <pre>{{ client.key.urlsafe() }}</pre> </p>
+		<form action="/oauth/authorize" method="POST">
+			<p>¿Permitir acceso?</p>
+			<input type="hidden" name="client_id" value="{{ app_client.client_id }}">
+			<input type="hidden" name="scope" value="{{ scopes|join(' ') }}">
+			<input type="hidden" name="response_type" value="{{ response_type }}">
+			<input type="hidden" name="redirect_uri" value="{{ redirect_uri }}">
+			{% if state %}
+			<input type="hidden" name="state" value="{{ state }}">
+			{% endif %}
+			<input type="submit" name="confirm" value="yes" class="btn btn-primary">
+			<input type="submit" name="confirm" value="no" class="btn btn-primary">
+		</form>
+	</div>
 </body>
 </html>

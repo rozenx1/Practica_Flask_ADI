@@ -10,18 +10,16 @@ from werkzeug.security import gen_salt
 from google.appengine.ext import ndb, blobstore
 from google.appengine.api import memcache
 from base64 import b64encode
-from re import search
 from itertools import dropwhile
 from functools import wraps
+from uuid import uuid4
 from json import loads
+from re import search
 from app_types import *
 from oauth_aux import *
-# import sys
-# reload(sys)
-# sys.setdefaultencoding('utf-8')
 
 app = Flask(__name__)
-app.secret_key = 'ultra-secret'
+app.secret_key = str(uuid4())
 app.config['DEBUG'] = True
 
 # AUXILIARY
@@ -35,6 +33,7 @@ def not_found(error):
     return make_response(jsonify({'Error': 'Not Found'}), 404)
 
 def retrieve(ID, cls=None):
+	'''Retrieve datastore key using urlsafe or id and class.'''
 	try:
 		if cls:
 			key = ndb.Key(cls, ID)
@@ -66,6 +65,7 @@ def check_cart(action):
 	return dec
 
 def get_blob(request, field):
+	'''Get the Blobstore key for uploaded file.'''
 	content = request.files[field]
 	strkey = search(r'blob-key="([^\']*?)"', str(content)).group(1)
 	return blobstore.get(strkey)
@@ -77,6 +77,7 @@ url_redirect = "http://localhost:8002/oauthorized"
 
 @app.route('/', methods=('GET', 'POST'))
 def home():
+	'''Endpoint in order to check your previously registered email.'''
     if request.method == 'POST':
         client = retrieve(request.form.get('email'), Client)
         session['client'] = client.urlsafe()
@@ -86,6 +87,7 @@ def home():
 
 @app.route('/app_client', methods=['GET'])
 def client():
+	'''Endpoint in order to generate app client (id and secret) for oauth.'''
     client_url = session.get("client")
     if not client_url: return redirect('/')
     app_client = AppClient(
@@ -165,6 +167,7 @@ def authorize(*args, **kwargs):
         kwargs['app_client'] = app_client
         client = app_client.key.parent().get()
         kwargs['client'] = client
+        print kwargs['client']
         return render_template('authorize.html', **kwargs)
 
 	confirm = request.form.get('confirm', 'no')
@@ -178,6 +181,7 @@ def access_token():
 @app.route('/me', methods=["POST"])
 @oauth.require_oauth()
 def me():
+	'''Gives you your client (urlsafe) from app client id.'''
 	client_id = request.get_json()['client_id']
 	app_client = AppClient.query(AppClient.client_id == client_id).fetch()[0]
 	client = app_client.key.parent()
@@ -198,12 +202,15 @@ def get_pw(username):
 		return users[username]
 	return None
 
-def get_auth(user):
-	if not users.has_key(user): return
-	return b64encode("{0}:{1}".format(user, users[user]))
+def get_auth(username):
+	'''Gives you the basic authorization code (base64) for a user'''
+	if not users.has_key(username): return
+	return b64encode("{0}:{1}".format(username, users[username]))
 
 @app.route('/submit_wine', methods=("POST", "GET"))
-def checkuser():
+def submit_wine():
+	'''Render the submit wine form and the auth form when GET, 
+	gives you auth code and upload url when POST.'''
 	if request.method == "POST":
 		data = request.get_json()
 		user = data['user']

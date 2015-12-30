@@ -10,35 +10,23 @@ $ ->
 		form = new FormData
 		has = (i) -> i.val() isnt '' 
 		info = {}
-		# name
-		name = $ "#wine-name"
-		info['name'] = name.val()
-		# dor
-		dor = $ "#wine-do"
-		info['do'] = dor.is(":checked")
-		# type
+		info['name'] = $("#wine-name").val()
+		info['do'] = $("#wine-do").is(":checked")
 		type = $ "#wine-type"
 		info['type'] = type.val()
 		if do type.val is "red"
-			# cask
 			cask = $ "#wine-cask"
 			info['cask'] = parseFloat cask.val() if has cask
-			# bottle
 			bottle = $ "#wine-bottle"
 			info['bottle'] = parseFloat bottle.val() if has bottle
-		# grade
 		grade = $ "#wine-grade"
 		info['grade'] = parseFloat grade.val() if has grade
-		# price
 		price = $ "#wine-price"
 		info['price'] = parseFloat price.val() if has price
-		# size
 		size = $ "#wine-size"
 		info['size'] = parseFloat size.val() if has size
-		# varietals
 		varietals = $ "#wine-varietals"
-		info['varietals'] = varietals.val().split(/[\s,]+/) if has varietals
-		# file
+		info['varietals'] = varietals.val().split(/\s*,+\s*/) if has varietals
 		file = $ "#wine-file"
 		path = file.val().split('\\')
 
@@ -51,8 +39,8 @@ $ ->
 			headers: {"Authorization": "Basic #{params.auth_basic}"}
 			data: form
 			contentType: off
-			cache: off
-			processData: off
+			# cache: off
+			# processData: off
 			success: (data) ->
 				$('#wine-form').addClass("hide")
 				$("#big-title").after "
