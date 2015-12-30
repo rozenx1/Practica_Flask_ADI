@@ -8,63 +8,64 @@
       contentType: "application/json; charset=utf-8"
     });
     $("#wine-form").on("submit", function(e) {
-      var bottle, cask, dor, file, form, grade, has, name, price, size, type, varietals;
+      var bottle, cask, dor, file, form, grade, has, info, name, path, price, size, type, varietals;
       e.preventDefault();
       form = new FormData;
       has = function(i) {
         return i.val() !== '';
       };
+      info = {};
       name = $("#wine-name");
-      if (!has(name)) {
-        return;
-      }
-      form.append('name', name.val());
+      info['name'] = name.val();
       dor = $("#wine-do");
-      form.append('do', dor.is(":checked"));
+      info['do'] = dor.is(":checked");
       type = $("#wine-type");
-      form.append('type', type.val());
+      info['type'] = type.val();
       if (type.val() === "red") {
         cask = $("#wine-cask");
         if (has(cask)) {
-          form.append('cask', cask.val());
+          info['cask'] = parseFloat(cask.val());
         }
         bottle = $("#wine-bottle");
         if (has(bottle)) {
-          form.append('bottle', bottle.val());
+          info['bottle'] = parseFloat(bottle.val());
         }
       }
       grade = $("#wine-grade");
       if (has(grade)) {
-        form.append('grade', grade.val());
+        info['grade'] = parseFloat(grade.val());
       }
       price = $("#wine-price");
       if (has(price)) {
-        form.append('price', price.val());
+        info['price'] = parseFloat(price.val());
       }
       size = $("#wine-size");
       if (has(size)) {
-        form.append('size', size.val());
+        info['size'] = parseFloat(size.val());
       }
       varietals = $("#wine-varietals");
       if (has(varietals)) {
-        form.append('varietals', varietals.val().split(/[\s,]+/));
+        info['varietals'] = varietals.val().split(/[\s,]+/);
       }
       file = $("#wine-file");
+      path = file.val().split('\\');
+      form.append('data', JSON.stringify(info));
       if (has(file)) {
-        form.append('photo', file.prop('files')[0], file.val());
+        form.append('photo', file.prop('files')[0], path[path.length - 1]);
       }
       return $.ajax({
         type: 'POST',
-        url: url_base + "/fake",
-        contentType: 'multipart/form-data',
+        url: params.upload_url,
         headers: {
           "Authorization": "Basic " + params.auth_basic
         },
         data: form,
+        contentType: false,
         cache: false,
         processData: false,
         success: function(data) {
-          return alert(data);
+          $('#wine-form').addClass("hide");
+          return $("#big-title").after("<div class='alert alert-success'> Vino '" + data.created + "' añadido </div>");
         }
       });
     });

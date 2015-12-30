@@ -30,7 +30,7 @@ class Wine(ndb.Model):
 	bottle = ndb.IntegerProperty()
 
 	def json(self):
-		return {
+		data = {
 			"url":self.key.urlsafe(),
 			"grade":self.grade,
 			"size":self.size,
@@ -38,10 +38,12 @@ class Wine(ndb.Model):
 			"do":self.do,
 			"price":self.price,
 			"name":self.name,
-			"photo":self.photo,
 			"cask":self.cask,
-			"bottle":self.bottle
+			"bottle":self.bottle,
+			"photo":None
 		}
+		if self.photo: data['photo'] = self.photo.ToXml()
+		return data
 
 class Cart(ndb.Model):
 	name = ndb.StringProperty()

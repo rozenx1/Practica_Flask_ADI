@@ -9,49 +9,56 @@ $ ->
 		do e.preventDefault
 		form = new FormData
 		has = (i) -> i.val() isnt '' 
+		info = {}
 		# name
 		name = $ "#wine-name"
-		return if not has name
-		form.append 'name', name.val()
+		info['name'] = name.val()
 		# dor
 		dor = $ "#wine-do"
-		form.append 'do', dor.is(":checked")
+		info['do'] = dor.is(":checked")
 		# type
 		type = $ "#wine-type"
-		form.append 'type', type.val()
+		info['type'] = type.val()
 		if do type.val is "red"
 			# cask
 			cask = $ "#wine-cask"
-			form.append 'cask', cask.val() if has cask
+			info['cask'] = parseFloat cask.val() if has cask
 			# bottle
 			bottle = $ "#wine-bottle"
-			form.append 'bottle', bottle.val() if has bottle
+			info['bottle'] = parseFloat bottle.val() if has bottle
 		# grade
 		grade = $ "#wine-grade"
-		form.append 'grade', grade.val() if has grade
+		info['grade'] = parseFloat grade.val() if has grade
 		# price
 		price = $ "#wine-price"
-		form.append 'price', price.val() if has price
+		info['price'] = parseFloat price.val() if has price
 		# size
 		size = $ "#wine-size"
-		form.append 'size', size.val() if has size
+		info['size'] = parseFloat size.val() if has size
 		# varietals
 		varietals = $ "#wine-varietals"
-		form.append 'varietals', varietals.val().split(/[\s,]+/) if has varietals
+		info['varietals'] = varietals.val().split(/[\s,]+/) if has varietals
 		# file
 		file = $ "#wine-file"
-		form.append 'photo', file.prop('files')[0], file.val() if has file
+		path = file.val().split('\\')
+
+		form.append 'data', JSON.stringify(info)
+		form.append 'photo', file.prop('files')[0], path[path.length-1] if has file
 
 		$.ajax
 			type: 'POST'
-			url: "#{url_base}/fake"
-			contentType: 'multipart/form-data'
+			url: params.upload_url
 			headers: {"Authorization": "Basic #{params.auth_basic}"}
 			data: form
+			contentType: off
 			cache: off
 			processData: off
 			success: (data) ->
-			    alert(data)
+				$('#wine-form').addClass("hide")
+				$("#big-title").after "
+					<div class='alert alert-success'> 
+					Vino '#{data.created}' añadido
+					</div>"
 
 	$('#auth-form').on "submit", (e) ->
 		do e.preventDefault

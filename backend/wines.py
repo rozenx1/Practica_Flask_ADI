@@ -10,8 +10,10 @@ from werkzeug.security import gen_salt
 from google.appengine.ext import ndb, blobstore
 from google.appengine.api import memcache
 from base64 import b64encode
+from re import search
 from itertools import dropwhile
 from functools import wraps
+from json import loads
 from app_types import *
 from oauth_aux import *
 # import sys
@@ -62,6 +64,11 @@ def check_cart(action):
 		if not kwargs["key_cart"].parent() == kwargs["key_client"]: abort(404)
 		return action(**kwargs)
 	return dec
+
+def get_blob(request, field):
+	content = request.files[field]
+	strkey = search(r'blob-key="([^\']*?)"', str(content)).group(1)
+	return blobstore.get(strkey)
 
 # OAUTH
 #-------------------------------------------------------------------------
@@ -185,9 +192,6 @@ users = {
 	"root":"admin"
 }
 
-@app.route("/fake", methods=["POST"])
-def fake(): pass
-
 @auth.get_password
 def get_pw(username):
 	if username in users:
@@ -206,20 +210,18 @@ def checkuser():
 		pw = data['pw']
 		if users.has_key(user) and users[user] == pw:
 			auth_basic = get_auth(user)
-			upload_url = blobstore.create_upload_url('/albums')
+			upload_url = blobstore.create_upload_url('/wines')
 			return jsonify({"auth_basic":auth_basic, 
 				"upload_url":upload_url})
 		else:
 			return make_response(jsonify(
 				{"error":"authorization failed"}), 401)
 
-
 	return render_template('submit_wine.html') 
 
 
-# ACTIONS
+# RESOURCES
 # ------------------------------------------------------------------------
-
 @app.route('/clients', methods=['POST'])
 @check_vals(["email", "password", "address", "phone"])
 def newClient():
@@ -260,9 +262,9 @@ def getClientDetails(ID_client):
 
 @app.route("/wines", methods=["POST"])
 @auth.login_required
-@check_vals(["name", "type"])
 def addWine():
-	data = request.get_json()
+	data = loads(request.form['data'])
+	data['photo'] = get_blob(request, 'photo').key()
 	data["parent"] = retrieve(data.pop("type"), WineType)
 	new_wine = Wine(**data)
 	ID = new_wine.put()

@@ -15,15 +15,15 @@
 		<h1 class="text-primary" id="big-title">Añadir vino</h1>
 		<form id="wine-form" class="hide">
 			<label for="name">Nombre(*campo obligatorio)</label>
-			<input type="text" name="name" class="form-control" id="wine-name">
+			<input type="text" name="name" class="form-control" id="wine-name" required>
 			<label for="varietals">Variedades(separadas por coma o espacio)</label>
 			<input type="text" name="varietals" class="form-control" id="wine-varietals">
 			<label for="grade">Grado</label>
-			<input type="number" name="grade" class="form-control" id="wine-grade">
+			<input type="number" name="grade" class="form-control" id="wine-grade" step="any">
 			<label for="size">Volumen</label>
 			<input type="number" name="size" class="form-control" id="wine-size">
 			<label for="price">Precio</label>
-			<input type="number" name="price" class="form-control" id="wine-price">
+			<input type="number" name="price" class="form-control" id="wine-price" step="any">
 			<input type="checkbox" name="do" id="wine-do">
 			<label for="do">Denominación de origen</label>
 			<select name="type" class="form-control" id="wine-type">
@@ -32,19 +32,19 @@
 				<option value="pink">Rosado</option>
 			</select>
 			<div id="red-options" class="hide">
-				<label for="cask" >Años en barrica</label>
+				<label for="cask">Años en barrica</label>
 				<input type="number" name="cask" class="form-control" id="wine-cask">
 				<label for="bottle">Años en botella</label>
 				<input type="number" name="bottle" class="form-control" id="wine-bottle">
 			</div>
-			<input type="file" class="form-control" style="margin-top:10px" id="wine-file" accept="image/*">
+			<input type="file" class="form-control" style="margin-top:10px" id="wine-file" accept="image/*" required>
 			<input type="submit" class="btn btn-primary" style="margin-top:10px">
 		</form>
 		<form id="auth-form" class="form-inline">
 			<label for="user">Nombre</label>
-			<input type="text" name="user" class="form-control">
+			<input type="text" name="user" class="form-control" required>
 			<label for="pw">Contraseña</label>
-			<input type="password" name="pw" class="form-control">
+			<input type="password" name="pw" class="form-control" required>
 			<input type="submit" class="btn btn-primary">
 		</form>
 	</div>
