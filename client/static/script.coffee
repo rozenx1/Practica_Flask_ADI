@@ -7,15 +7,14 @@ $ ->
 		for w in wines
 			# row = $ "<div class='row'></div>"
 			row = $.parseHTML "<div class='row'>
-						<div class='panel panel-primary'>
-							<div class='panel-body' id='panel-#{w.url}'->
-								
-							</div>
-						</div>
-					</div>"
+									<div class='panel panel-primary'>
+										<div class='panel-body' id='panel-#{w.url}'->
+										</div>
+									</div>
+								</div>"
 			wines_div.append row
 			panel_div = $ "#panel-#{w.url}"
-			panel_div.append "<input type='checkbox' name='vehicle' value='#{w.url}'> <b>#{w.name}</b> "
+			panel_div.append "<input type='checkbox' name='vehicle' value='#{w.url}'> <b >#{w.name}</b> "
 			panel_div.append "- #{w.grade} grados " if w.grade
 			panel_div.append "- #{w.size} centilitros " if w.size
 			panel_div.append "- #{w.price} € " if w.price

@@ -7,11 +7,16 @@ from flask_oauthlib.provider import OAuth2Provider
 from flask_httpauth import HTTPBasicAuth
 from datetime import datetime, timedelta
 from werkzeug.security import gen_salt
-from google.appengine.ext import ndb
+from google.appengine.ext import ndb, blobstore
+from google.appengine.api import memcache
+from base64 import b64encode
 from itertools import dropwhile
 from functools import wraps
 from app_types import *
 from oauth_aux import *
+# import sys
+# reload(sys)
+# sys.setdefaultencoding('utf-8')
 
 app = Flask(__name__)
 app.secret_key = 'ultra-secret'
@@ -180,11 +185,37 @@ users = {
 	"root":"admin"
 }
 
+@app.route("/fake", methods=["POST"])
+def fake(): pass
+
 @auth.get_password
 def get_pw(username):
 	if username in users:
 		return users[username]
 	return None
+
+def get_auth(user):
+	if not users.has_key(user): return
+	return b64encode("{0}:{1}".format(user, users[user]))
+
+@app.route('/submit_wine', methods=("POST", "GET"))
+def checkuser():
+	if request.method == "POST":
+		data = request.get_json()
+		user = data['user']
+		pw = data['pw']
+		if users.has_key(user) and users[user] == pw:
+			auth_basic = get_auth(user)
+			upload_url = blobstore.create_upload_url('/albums')
+			return jsonify({"auth_basic":auth_basic, 
+				"upload_url":upload_url})
+		else:
+			return make_response(jsonify(
+				{"error":"authorization failed"}), 401)
+
+
+	return render_template('submit_wine.html') 
+
 
 # ACTIONS
 # ------------------------------------------------------------------------
@@ -235,6 +266,7 @@ def addWine():
 	data["parent"] = retrieve(data.pop("type"), WineType)
 	new_wine = Wine(**data)
 	ID = new_wine.put()
+	memcache.add(key=ID.urlsafe(), value=new_wine, time=900)
 	return make_response(jsonify({"created":ID.urlsafe()}), 201)
 
 @app.route("/wines", methods=["GET"])
@@ -244,29 +276,42 @@ def allWines():
 
 @app.route("/wines/<ID_wine>", methods=["GET"])
 def getWineProperties(ID_wine):
-	wine = retrieve(ID_wine).get()
+	wine = memcache.get(ID_wine)
+	if not wine:
+		wine = retrieve(ID_wine).get()
+		memcache.add(key=ID_wine, value=wine, time=900)
 	return make_response(jsonify({"wine":wine.json()}), 200)
 
 @app.route("/wines/<ID_wine>", methods=["PUT"])
 def updateWine(ID_wine):
 	data = request.get_json()
-	wine = retrieve(ID_wine).get()
+	wine = memcache.get(ID_wine)
+	if wine:
+		memcache.delete(ID_wine)
+	else:
+		wine = retrieve(ID_wine).get()
 	vals = ("do", "grade", "size", "varietals", "price", "name", 
 		"photo", "cask", "bottle")
 	for k,v in data.iteritems():
 		if k in vals: setattr(wine, k, v)
 	wine.put()
+	memcache.add(key=ID_wine, value=wine, time=900)
 	return make_response(jsonify({"updated":ID_wine}), 200)
 
 @app.route("/wines", methods=["DELETE"])
 def deleteWines():
 	wines = Wine.query().fetch(keys_only=True)
 	for w in wines: w.delete()
+	memcache.flush_all()
 	return make_response(jsonify({"deleted":"all"}), 200)
 
 @app.route("/wines/<ID_wine>", methods=["DELETE"])
 def deleteWine(ID_wine):
-	wine = retrieve(ID_wine)
+	wine = memcache.get(ID_wine)
+	if wine:
+		memcache.delete(ID_wine)
+	else:
+		wine = retrieve(ID_wine)
 	wine.delete()
 	return make_response(jsonify({"deleted":ID_wine}), 200)
 
@@ -333,6 +378,7 @@ def updateItem(key_client, key_cart, ID_wine):
 	cart.items.append(item)
 	cart.put()
 	return make_response(jsonify({"updated":item.urlsafe()}), 200)
+
 
 if __name__ == "__main__":
 	app.run(port=8001)

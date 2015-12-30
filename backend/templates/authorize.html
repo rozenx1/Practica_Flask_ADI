@@ -3,6 +3,10 @@
 <head>
 	<meta charset="UTF-8">
 	<title>Authorization</title>
+	<link rel=stylesheet type=text/css href="{{ url_for('static',filename='bootstrap.css') }}">
+	<link rel=stylesheet type=text/css href="{{ url_for('static',filename='bootstrap-theme.css') }}">
+	<script src="{{ url_for('static', filename='jquery.js') }}"></script>
+	<script src="{{ url_for('static', filename='bootstrap.min.js') }}"></script>
 </head>
 <body>
 	<p>Client: {{ app_client.client_id }}</p>
