@@ -51,6 +51,7 @@ class Cart(ndb.Model):
 
 	def json(self):
 		return {
+			"url":self.key.urlsafe(),
 			"name":self.name,
 			"items":self.items
 		}

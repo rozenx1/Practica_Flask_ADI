@@ -12,8 +12,8 @@ app.config['DEBUG'] = True
 
 # OAUTH
 #-------------------------------------------------------------------------
-client_id = "kUpFYk8wdI3rv8Q4T0FZ6EWSZ0aoiWwj2bs8T6Nc"
-client_secret = "5iHsNjjgArC2NfUXGVGpTQ9cMIQ0LPn9hq959A5LCauLa4127n"
+client_id = "zyBHAsqORoZkkBj9ZOEF4NdyyxTkjwHbmaaHUVDY"
+client_secret = "aQeqI1atg7w0vW6DZFw14O49yk5wghx7YU7BPNt3cLTOx2812n"
 
 oauth = OAuth(app)
 remote = oauth.remote_app(
@@ -62,6 +62,11 @@ def oauthorized():
         session['remote_oauth'] = resp
     return redirect('/')
 
+# AUX
+#-------------------------------------------------------------------------
+def who_am_i():
+    return remote.post('/me', data=dumps({"client_id":client_id}),
+        content_type="application/json").data['me']
 
 # ACTIONS
 #-------------------------------------------------------------------------
@@ -81,24 +86,31 @@ def filterByType(wine_type):
 
 @app.route('/filterByName/<wine_name>')
 def filterByName(wine_name):
-    wines = remote.get('wines').data['all']
-    wines = filter(lambda w: wine_name in w['name'], wines)
-    return jsonify({"all":wines})
+    url = '/filterByName/{wine_name}'.format(**locals())
+    wines = remote.get(url)
+    return jsonify(wines.data)
 
 @app.route('/filterByPrices', methods=['POST'])
 def filterByPrices():
-    data = request.get_json()
-    wines = remote.get('wines').data['all']
-    f = lambda w: w['price'] >= data['min'] and w['price'] <= data['max']
-    wines = filter(f, wines)
-    return jsonify({"all":wines})
+    params = request.get_json()
+    wines = remote.post('/filterByPrices', data=dumps(params), 
+        content_type="application/json")
+    return jsonify(wines.data)
+
+@app.route('/getCarts')
+def carts():
+    params = request.get_json()
+    me = who_am_i()
+    print me
+    url = "/clients/{me}/carts".format(**locals())
+    get = remote.get(url)
+    print get.data
+    return jsonify(get.data)
 
 @app.route('/postCart', methods=["POST"])
 def postCart():
     data = request.get_json()
-    post = remote.post('/me', data=dumps({"client_id":client_id}),
-        content_type="application/json")
-    me = post.data['me']
+    me = who_am_i()
     url = "/clients/{me}/carts".format(**locals())
     post = remote.post(url, data=dumps(data), 
         content_type="application/json")

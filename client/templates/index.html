@@ -7,7 +7,6 @@
 	<link rel=stylesheet type=text/css href="{{ url_for('static',filename='bootstrap-theme.css') }}">
 	<script src="{{ url_for('static', filename='jquery.js') }}"></script>
 	<script src="{{ url_for('static', filename='bootstrap.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='script.js') }}"></script>
 </head>
 <body>
 	<div class="container">
@@ -15,46 +14,51 @@
 		{% if not g.user %}
 		<a href="{{ url_for('login') }}" class="btn btn-success">Sign in</a>
 		{% else %}
+		<script src="{{ url_for('static', filename='script.js') }}"></script>
 		<a href="{{ url_for('logout') }}" class="btn btn-warning">Sign out</a>
 		<hr>
+		<!-- ALL CARTS -->
+		<h3 class="text-primary">All carts</h3>
+		<div id="carts">
+		</div>
 		<!-- CART -->
-		<label for="cart-name">Nombre del carrito (Opcional)</label>
+		<label for="cart-name">Nombre del carrito a añadir (Opcional)</label>
 		<input class="form-control" type="text" id="cart-name" placeholder="name">
 
 		<h3 class="text-primary">All Wines</h3>
 		<br>
 		<!-- WINE FILTERS -->
 		<!-- Types filter -->
-				<div class="form-inline">
-					<label>Tipos:</label>
-					<button class="btn btn-success" id="red-wines">Rojos</button>
-					<button class="btn btn-success" id="white-wines">Blancos</button>
-					<button class="btn btn-success" id="pink-wines">Rosados</button>
-					<button class="btn btn-success" id="all-wines">Todos</button>
-				</div>
-				<!-- Name filter -->
-				<div class="form-inline" style="margin-top:20px;" id="name-filter">
-					<label for="name">Nombre:</label>
-					<input class="form-control" id="name" type="text" placeholder="Nombre"></input>
-					<button class="btn btn-success" id="filter-name">Filtrar por nombre</button>
-				</div>
-				<!-- Prices filter -->
-				<div class="form-inline" style="margin-top:20px;" id="prices-filter">
-					<label for="minimo">Precio mínimo:</label>
-					<input class="form-control" id="minimo" type="text" placeholder="Mínimo"></input>
-					<label for="maximo">Precio máximo:</label>
-					<input class="form-control" id="maximo" type="text" placeholder="Mínimo"></input>
-					<button class="btn btn-success" id="filter-prices">Filtrar por precios</button>
-				</div>
-			<br>
-			<p>*Los winos chequeados a continuación serán añadidos a su carrito</p>
-			<hr>
-			<!-- WINE STUFF -->
-			<div id="wines">
-			</div>
-			<hr>
-			<!-- Create cart -->
-			<button id="create-cart" class="btn btn-primary" style="margin-bottom:20px;">Crear carrito</button>
+		<div class="form-inline">
+			<label>Tipos:</label>
+			<button class="btn btn-success" id="red-wines">Rojos</button>
+			<button class="btn btn-success" id="white-wines">Blancos</button>
+			<button class="btn btn-success" id="pink-wines">Rosados</button>
+			<button class="btn btn-success" id="all-wines">Todos</button>
+		</div>
+		<!-- Name filter -->
+		<div class="form-inline" style="margin-top:20px;" id="name-filter">
+			<label for="name">Nombre:</label>
+			<input class="form-control" id="name" type="text" placeholder="Nombre"></input>
+			<button class="btn btn-success" id="filter-name">Filtrar por nombre</button>
+		</div>
+		<!-- Prices filter -->
+		<div class="form-inline" style="margin-top:20px;" id="prices-filter">
+			<label for="minimo">Precio mínimo:</label>
+			<input class="form-control" id="minimo" type="text" placeholder="Mínimo"></input>
+			<label for="maximo">Precio máximo:</label>
+			<input class="form-control" id="maximo" type="text" placeholder="Mínimo"></input>
+			<button class="btn btn-success" id="filter-prices">Filtrar por precios</button>
+		</div>
+		<br>
+		<p>*Los winos chequeados a continuación serán añadidos a su carrito</p>
+		<hr>
+		<!-- WINE STUFF -->
+		<div id="wines">
+		</div>
+		<hr>
+		<!-- Create cart -->
+		<button id="create-cart" class="btn btn-primary" style="margin-bottom:20px;">Crear carrito</button>
 		{% endif %}
 	</div>
 </body>

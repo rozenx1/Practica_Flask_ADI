@@ -226,6 +226,23 @@ def submit_wine():
 
 	return render_template('submit_wine.html') 
 
+# QUERIES
+# ------------------------------------------------------------------------
+@app.route('/filterByName/<wine_name>')
+def filterByName(wine_name):
+	# Google app engine can't do partial text matches natively :(
+	raw = Wine.query().fetch()
+	filtered = filter(lambda w: wine_name in w.name, raw)
+	wines = map(lambda w: w.json(), filtered)
+	return jsonify({"all":wines})
+
+@app.route('/filterByPrices', methods=['POST'])
+def filterByPrices():
+    data = request.get_json()
+    raw = Wine.query(Wine.price >= data['min'], Wine.price <= data['max']).fetch()
+	wines = map(lambda w: w.json(), raw)
+    return jsonify({"all":wines})
+
 
 # RESOURCES
 # ------------------------------------------------------------------------
@@ -235,6 +252,7 @@ def newClient():
 	data = request.get_json()
 	data["id"] = data.pop("email")
 	new_client = Client(**data)
+	print new_client
 	ID = new_client.put()
 	return make_response(jsonify({"created":ID.urlsafe()}), 201)
 
@@ -337,8 +355,18 @@ def addCart(ID_client):
 	data["parent"] = retrieve(ID_client)
 	data['items'] = map(lambda i: retrieve(i), data['items'])
 	new_cart = Cart(**data)
-	ID = new_cart.put()	
+	ID = new_cart.put()
 	return make_response(jsonify({"created":ID.urlsafe()}), 201)
+
+@app.route("/clients/<ID_client>/carts", methods=["GET"])
+@oauth.require_oauth()
+def allCarts(ID_client):
+	carts = Cart.query(ancestor=retrieve(ID_client))
+	carts = [c.json() for c in carts]
+	for c in carts:
+		c['items'] = [w.get().json()['name'] for w in c['items']]
+	return make_response(jsonify({"all":carts}))
+
 
 @app.route("/clients/<ID_client>/carts/<ID_cart>", methods=["DELETE"])
 @oauth.require_oauth()

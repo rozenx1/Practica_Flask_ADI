@@ -8,17 +8,15 @@
       contentType: "application/json; charset=utf-8"
     });
     $("#wine-form").on("submit", function(e) {
-      var bottle, cask, dor, file, form, grade, has, info, name, path, price, size, type, varietals;
+      var bottle, cask, file, form, grade, has, info, path, price, size, type, varietals;
       e.preventDefault();
       form = new FormData;
       has = function(i) {
         return i.val() !== '';
       };
       info = {};
-      name = $("#wine-name");
-      info['name'] = name.val();
-      dor = $("#wine-do");
-      info['do'] = dor.is(":checked");
+      info['name'] = $("#wine-name").val();
+      info['do'] = $("#wine-do").is(":checked");
       type = $("#wine-type");
       info['type'] = type.val();
       if (type.val() === "red") {
@@ -45,7 +43,7 @@
       }
       varietals = $("#wine-varietals");
       if (has(varietals)) {
-        info['varietals'] = varietals.val().split(/[\s,]+/);
+        info['varietals'] = varietals.val().split(/\s*,+\s*/);
       }
       file = $("#wine-file");
       path = file.val().split('\\');
@@ -61,8 +59,6 @@
         },
         data: form,
         contentType: false,
-        cache: false,
-        processData: false,
         success: function(data) {
           $('#wine-form').addClass("hide");
           return $("#big-title").after("<div class='alert alert-success'> Vino '" + data.created + "' añadido </div>");

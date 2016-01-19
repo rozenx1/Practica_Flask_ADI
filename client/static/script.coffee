@@ -62,6 +62,27 @@ $ ->
 			insertWines data['all']
 
 
+	charge_carts = ->
+		$.get "/getCarts", (data) ->
+			carts_div = $ '#carts'
+			carts_div.empty()
+			for cart in data.all
+				row = $.parseHTML "<div class='row'>
+										<div class='panel panel-danger'>
+											<div class='panel-body' id='cart-#{cart.url}'->
+											</div>
+										</div>
+									</div>"
+				carts_div.append row
+				panel = $ "#cart-#{cart.url}"
+				panel.append "<b>#{cart.name or 'Sin nombre'}</b>"
+				for wine in cart.items
+					panel.append " - <i>#{wine}</i>"
+
+			
+
+	do charge_carts
+
 	$("#create-cart").on "click", ->
 		name = do $("#cart-name").val
 		wines = $("input:checkbox:checked").map -> $(@).val()
@@ -70,10 +91,9 @@ $ ->
 		values = JSON.stringify(values)
 
 		$.post url_base+"/postCart", values, (data) ->
+			do charge_carts
 			$("#big-title").after "
 				<div class='alert alert-success'> 
 				<button class='close' data-dismiss='alert'><span>&times;</span></button> 
 				Carrito '#{data['created']}' creado 
 				</div>"
-
-
